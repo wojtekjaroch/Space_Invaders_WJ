@@ -101,7 +101,27 @@ function update() {
         bullet.y += bulletVelocityY;
         context.fillStyle="white";
         context.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+
+        // kolizja pocisków i obcych
+        for (let j = 0; j < alienArray.length; j++) {
+            let alien = alienArray[j];
+            if (!bullet.used && alien.alive && detectCollision(bullet, alien)) {
+                bullet.used = true;
+                alien.alive = false;
+                alienCount--; 
+            }
+        }
+
+
+
+
     }
+    
+    // usuwanie pocisków poza canvas - aby nie zaśmiecać pamięci, co spowolni grę, należy usunąć pociski
+    while (bulletArray.length > 0 && (bulletArray[0].used || bulletArray[0].y < 0)) {
+        bulletArray.shift(); // to usuwa 1-szy element array (tablicy)
+    } 
+    // bulletArray.length > 0, czyli pociski są aktywne, symbol || oznacza LUB
 
 }
 
@@ -145,3 +165,9 @@ function shoot(e) {
     }
 }
     
+function detectCollision(a, b) {
+    return a.x < b.x + b.width &&   // górny lewy róg obiektu a (alien??) nie osiąga górnego prawego rogu obiektu b (bullet??) - tutaj chyba chodzi o kolejność podania zmiennych, a nie same nazwy
+           a.x + a.width > b.x &&   // prawy górny róg obiektu a omija górny lewy róg obiektu b
+           a.y < b.y + b.height &&  // górny lewy róg obiektu a nie osiąga dolnego lewego rogu obiektu b
+           a.y + a.height > b.y;    // lewy dolny róg obiektu a omija lewy górny róg obiektu b
+}
