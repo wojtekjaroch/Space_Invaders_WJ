@@ -41,7 +41,15 @@ let alienVelocityX = 1; //prędkość poruszania się obcych
 let bulletArray = [];
 let bulletVelocityY = -10; //pociski poruszają się przeciwnie do kierunku osi Y, która jest skierowana w dół
 
-window.onload = function() {
+let score = 0;
+let gameOver = false;
+
+const shotSound = new Audio('shot.mp3');
+const explosionSound = new Audio('explosion.wav');
+
+
+
+window.onload = function() {                // TO DO: zamienic na defer a nie window.onload
     board = document.getElementById("board");
     board.width = boardWidth;
     board.height = boardHeight;
@@ -50,7 +58,7 @@ window.onload = function() {
     // draw initial ship
     // context.fillStyle="green";
     // context.fillRect(ship.x, ship.y, ship.width, ship.height);
-    // zakomentowane, bo wrzucimy obrazek :)
+    // zakomentowane, bo wrzucimy obrazek
 
     shipImg = new Image();
     shipImg.src = "./ship.png";
@@ -69,6 +77,10 @@ window.onload = function() {
 
 function update() {
     requestAnimationFrame(update);
+
+    if (gameOver) {
+        return;
+    }
 
     context.clearRect(0, 0, board.width, board.height);     //Rect - rectangle - czyli prostokąt
 
@@ -92,6 +104,10 @@ function update() {
                 }
             }
             context.drawImage(alienImg, alien.x, alien.y, alien.width, alien.height);
+
+            if (alien.y >= ship.y) {
+                gameOver = true;
+            }
         }
     }
 
@@ -99,7 +115,7 @@ function update() {
     for (let i = 0; i < bulletArray.length; i++) {
         let bullet = bulletArray[i];
         bullet.y += bulletVelocityY;
-        context.fillStyle="white";
+        context.fillStyle="yellow";
         context.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
 
         // kolizja pocisków i obcych
@@ -109,23 +125,40 @@ function update() {
                 bullet.used = true;
                 alien.alive = false;
                 alienCount--; 
+                score += 100;
+                playExplosionSound()
             }
         }
-
-
-
-
     }
     
     // usuwanie pocisków poza canvas - aby nie zaśmiecać pamięci, co spowolni grę, należy usunąć pociski
     while (bulletArray.length > 0 && (bulletArray[0].used || bulletArray[0].y < 0)) {
         bulletArray.shift(); // to usuwa 1-szy element array (tablicy)
-    } 
-    // bulletArray.length > 0, czyli pociski są aktywne, symbol || oznacza LUB
+    } // bulletArray.length > 0, czyli pociski są aktywne, symbol || oznacza LUB
+    
+    // kolejny poziom, kiedy zastrzeli się wszystkich obcych
 
+    if (alienCount == 0) {
+        // zwiększenie ilości obcych w kolumnach i rzędch o 1
+        alienColumns = Math.min(alienColumns + 1, columns/2 - 2); // najwięcej będzie 16/2 -2 = 6 max 6 kolumn obcych
+        alienRows = Math.min(alienRows + 1, rows - 4); // najwięcej będzie 16 - 4 = 12 max 12 rzędów obcych
+        alienVelocityX += 0.2; // przyspiesza poruszanie się obcych
+        alienArray = []; // usuwamy obcych (czysta tablica)
+        bulletArray = []; // usuwamy pociski, aby nowych obcych nie zabił stary pocisk
+        createAliens();
+    }
+
+    // wynik
+    context.fillStyle="white";
+    context.font="16px courier";
+    context.fillText(score, 5, 20);
 }
 
 function moveShip(e) {
+    if (gameOver) {
+        return;
+    }
+
     if (e.code == "ArrowLeft" && ship.x - shipVelocityX >= 0) {
        ship.x -= shipVelocityX; // przesuwa w lewo z prędkością, jaką zadaliśmy (1 tile)
     }
@@ -151,7 +184,21 @@ function createAliens() {
     alienCount = alienArray.length;
 }
 
+
+function playShotSound() {
+    shotSound.currentTime = 0; // Reset the audio to the beginning
+    shotSound.play(); // Play the audio
+  }
+
+function playExplosionSound() {
+    explosionSound.currentTime = 0; // Reset the audio to the beginning
+    explosionSound.play(); // Play the audio
+  }
+
 function shoot(e) { 
+    if (gameOver) {
+        return;
+    }
     // strzelanie
     if (e.code =="Space") {
       let bullet = {
@@ -159,11 +206,14 @@ function shoot(e) {
         y : ship.y,
         width : tileSize/8,
         height : tileSize/2,
-        used : false //ustawiamy wartość boolean, która sprawdzi, czy pocisk uderzył lub nie w obcego, brak takiej wartości sprawi, że pocisk przeleci przez obcego i poleci dalej  
+        used : false, //ustawiamy wartość boolean, która sprawdzi, czy pocisk uderzył lub nie w obcego, brak takiej wartości sprawi, że pocisk przeleci przez obcego i poleci dalej  
         }
+        playShotSound()
         bulletArray.push(bullet);    
     }
 }
+
+
     
 function detectCollision(a, b) {
     return a.x < b.x + b.width &&   // górny lewy róg obiektu a (alien??) nie osiąga górnego prawego rogu obiektu b (bullet??) - tutaj chyba chodzi o kolejność podania zmiennych, a nie same nazwy
