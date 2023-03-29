@@ -222,4 +222,3 @@ function detectCollision(a, b) {
            a.y + a.height > b.y;    // lewy dolny róg obiektu a omija lewy górny róg obiektu b
 }
 
-// LE FINAL
