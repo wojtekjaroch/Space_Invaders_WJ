@@ -3,15 +3,15 @@ let tileSize = 32;
 let rows = 16;
 let columns = 16;
 
-let board;
+let board;   // zmienna, na której robie opracje
 let boardWidth = tileSize * columns; //32 * 16
 let boardHeight = tileSize * rows; //32 * 16
 let context;
 
-//ship
+//statek
 let shipWidth = tileSize*2;
 let shipHeight = tileSize;
-let shipX = tileSize * columns/2 - tileSize;
+let shipX = tileSize * columns/2 - tileSize; // położenie inicjalne statku (licząc od jego górnego lewego rogu)
 let shipY = tileSize * rows - tileSize*2;
 
 let ship = {
@@ -22,9 +22,9 @@ let ship = {
 }
 
 let shipImg;
-let shipVelocityX = tileSize; // prędkość poruszania się statku
+let shipVelocityX = tileSize; // prędkość poruszania się statku za każdym razem, gdy go ruszymy
 
-//aliens
+//obcy
 let alienArray = [];
 let alienWidth = tileSize*2;
 let alienHeight = tileSize;
@@ -50,20 +50,20 @@ const explosionSound = new Audio('explosion.wav');
 
 
 window.onload = function() {                // TO DO: zamienic na defer a nie window.onload
-    board = document.getElementById("board");
+    board = document.getElementById("board"); // board jest naszym zbiornikiem canvas 
     board.width = boardWidth;
     board.height = boardHeight;
-    context = board.getContext("2d"); // used for drawing the board
+    context = board.getContext("2d"); // used for drawing the board - 
 
     // draw initial ship
     // context.fillStyle="green";
-    // context.fillRect(ship.x, ship.y, ship.width, ship.height);
-    // zakomentowane, bo wrzucimy obrazek
+    // context.fillRect(ship.x, ship.y, ship.width, ship.height);  // Rect - prostokąt (rectangle)
+    // zakomentowane, bo wrzucam obrazek
 
     shipImg = new Image();
     shipImg.src = "./ship.png";
     shipImg.onload = function() {
-        context.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height);
+        context.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height); // rysunek, pozcja początkowa lewego górnego rogu i szer. i wys. statku
     }  
     
     alienImg = new Image();
@@ -76,29 +76,29 @@ window.onload = function() {                // TO DO: zamienic na defer a nie wi
 }
 
 function update() {
-    requestAnimationFrame(update);
+    requestAnimationFrame(update); //statek jest rysowany wciąż od nowa, aby przy ruchu był widoczny na canvas
 
     if (gameOver) {
         return;
     }
 
-    context.clearRect(0, 0, board.width, board.height);     //Rect - rectangle - czyli prostokąt
+    context.clearRect(0, 0, board.width, board.height);     //Rect - rectangle - czyli prostokąt przy poruszaniu się statku
 
-    //ship
+    //statek 
     context.drawImage(shipImg, ship.x, ship.y, ship.width, ship.height);
 
-    //alien
+    //obcy
     for (let i = 0; i < alienArray.length; i++ ) {
         let alien = alienArray[i];
         if (alien.alive) {
-            alien.x += alienVelocityX;
+            alien.x += alienVelocityX;  // prędkość poruszania się obcych
 
             //jeśli obcy osiągnie granicę canvas, musi zmienić kierunek poruszania się 
             if (alien.x + alien.width >= board.width || alien.x <= 0) {
                 alienVelocityX *= -1;
-                alien.x += alienVelocityX*2;
+                alien.x += alienVelocityX*2; //synchronizuje wszystkich obcych przy zmianie kierunku poruszania się
 
-                //poruszanie się obcych o 1 rząd w kierunku statku
+                //poruszanie się obcych o 1 rząd w kierunku statku z chwilą, gdy obcy dotknie granicy canvas
                 for (let j = 0; j <alienArray.length; j++) {
                     alienArray[j].y += alienHeight;
                 }
@@ -116,7 +116,7 @@ function update() {
         let bullet = bulletArray[i];
         bullet.y += bulletVelocityY;
         context.fillStyle="yellow";
-        context.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+        context.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);  // pocisk jest prostokątem 
 
         // kolizja pocisków i obcych
         for (let j = 0; j < alienArray.length; j++) {
@@ -131,13 +131,12 @@ function update() {
         }
     }
     
-    // usuwanie pocisków poza canvas - aby nie zaśmiecać pamięci, co spowolni grę, należy usunąć pociski
+    // usuwanie pocisków poza canvas - aby nie zaśmiecać pamięci, co spowolni grę, należy usunąć pociski; bulletArray[0].y < 0 pierwszy pocisk staje się nieaktywny
     while (bulletArray.length > 0 && (bulletArray[0].used || bulletArray[0].y < 0)) {
         bulletArray.shift(); // to usuwa 1-szy element array (tablicy)
     } // bulletArray.length > 0, czyli pociski są aktywne, symbol || oznacza LUB
     
     // kolejny poziom, kiedy zastrzeli się wszystkich obcych
-
     if (alienCount == 0) {
         // zwiększenie ilości obcych w kolumnach i rzędch o 1
         alienColumns = Math.min(alienColumns + 1, columns/2 - 2); // najwięcej będzie 16/2 -2 = 6 max 6 kolumn obcych
@@ -154,12 +153,12 @@ function update() {
     context.fillText(score, 5, 20);
 }
 
-function moveShip(e) {
+function moveShip(e) {      // e - event, jakim jest poruszenie  strzałki jak poniżej
     if (gameOver) {
         return;
     }
 
-    if (e.code == "ArrowLeft" && ship.x - shipVelocityX >= 0) {
+    if (e.code == "ArrowLeft" && ship.x - shipVelocityX >= 0) { // zabezpieczenie, aby statek nie wyszedł z canvasu
        ship.x -= shipVelocityX; // przesuwa w lewo z prędkością, jaką zadaliśmy (1 tile)
     }
     else if (e.code == "ArrowRight" && ship.x + shipVelocityX + ship.width <= board.width) {
@@ -172,13 +171,13 @@ function createAliens() {
         for (let r = 0; r < alienRows; r++) {
             let alien = {
                 img : alienImg,
-                x : alienX + c*alienWidth,
-                y : alienY + r*alienHeight,
+                x : alienX + c*alienWidth,  // kolejny obcy na osi x
+                y : alienY + r*alienHeight, // kolejny obcy na osi y
                 width : alienWidth,
                 height : alienHeight,
                 alive : true
             }
-            alienArray.push(alien);
+            alienArray.push(alien); // układamy obcych na tablicy obcych
         }
     }
     alienCount = alienArray.length;
