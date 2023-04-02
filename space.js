@@ -79,6 +79,7 @@ function update() {
     requestAnimationFrame(update); //statek jest rysowany wciąż od nowa, aby przy ruchu był widoczny na canvas
 
     if (gameOver) {
+        drawGameOver();
         return;
     }
 
@@ -221,3 +222,16 @@ function detectCollision(a, b) {
            a.y + a.height > b.y;    // lewy dolny róg obiektu a omija lewy górny róg obiektu b
 }
 
+function drawGameOver() {
+    context.fillStyle = "white";
+    context.font = "bold 48px Arial";
+    context.textAlign = "center";
+    context.fillText("Game Over", board.width / 2, board.height / 2);
+  }
+
+  function drawGameOver() {
+    context.fillStyle = "white";
+    context.font = "bold 48px Arial";
+    context.textAlign = "center";
+    context.fillText("Game Over", board.width / 2, board.height / 2);
+  }
